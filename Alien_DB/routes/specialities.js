@@ -2,7 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const Joi = require('joi');
 const router = express.Router();
-//const Speciality = require('../models/speciality');
+
  
 
 const Speciality = mongoose.model('Speciality', new mongoose.Schema({

@@ -1,0 +1,34 @@
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<h3><a class="btn btn-secondary" href="/addOrEdit"><i class="fa fa-plus">Another Appointment</i></a></h3>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>fullName</th>
+            <th>Email</th>
+            <th>Mobile</th>
+            <th>City</th>
+            <th>Doctorname</th>
+            <th>Date</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <% list.forEach(function(item,index) {  %>
+        <tr>
+            <td><%= this.fullName %></td>
+            <td><%= this.email %></td>
+            <td><%= this.mobile %></td>
+            <td><%= this.city %></td>
+            <td><%= this.doctorname %></td>
+            <td><%= this.date %></td>
+            <td>
+                <a href="/appointment/<%= this._id%>"><i class="fa fa-pencil fa lg" aria-hidden="true"></i> </a>
+                <a href="/appointment/delete/<%= this._id%>" onclick="return confirm('Are you sure to delete the record?');"><i class="fa fa-pencil fa lg" aria-hidden="true"></i></a>
+            </td>
+        </tr>
+        <% }) %>
+    </tbody>
+</table>

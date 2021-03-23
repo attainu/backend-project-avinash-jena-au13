@@ -7,27 +7,29 @@ const path = require('path');
 
 const bcrypt = require('bcrypt');
 const passport = require('passport');
-const bodyParser = require('body-parser');
+const bodyparser = require('body-parser');
 const flash = require('express-flash');
 const session = require('express-session');
 
 const passportlocalmongoose = require ('passport-local-mongoose');
 
-
+const exphbs = require('express-handlebars');
 const LocalStrategy = require('passport-local').Strategy;
 
 const doctorsRouter = require('./routes/doctors');
+
 const specialitySchema = require('./routes/specialities');
-const appointRouter = require('./routes/appoint');
+
+const appointmentSchema = require('./models/appointment');
 const User = require('./models/user');
 //const { Passport, session } = require('passport');
-
+const Appointment = require('./models/appointment');
 const app = express();
 
 app.use(express.json());
 app.use('/doctors',doctorsRouter);
 app.use('/specialities',specialitySchema);
-app.use('/appiont',appointRouter);
+app.use('/appointment',appointmentSchema);
 
 
 mongoose.set('useNewUrlParser',true);
@@ -43,12 +45,17 @@ con.on('open', () => {
 
 //login routes
 app.set('views', path.join(__dirname, '/views'));
+
 app.set('view-engine','ejs');
 app.use(express.static('./public'));
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: false}));
 //app.use(express.urlencoded({ extended: true}));
+app.use(bodyparser.urlencoded({
+    extended: true
+}));
+app.use(bodyparser.json());
 app.use(flash());
 app.use(require("express-session")({
     secret: "Jyothsna",
@@ -122,6 +129,117 @@ function checkAuthenticated(req,res,next) {
     res.redirect('/login');
 }
 
+
+//appointment routes
+
+app.get('/appointments', (req,res) =>{
+    //const appointments = await Appointment.find().sort('name');
+   // res.send(specialities);
+    res.render('addOrEdit.ejs',{
+        viewTitle: "Book Appointment",
+       // appointment: req.body
+    });
+});
+
+app.post('/appointments', (req,res) => {
+    if (req.body._id == '')
+        insertRecord(req, res);
+        else
+        updateRecord(req, res);
+});
+
+function insertRecord(req,res) {
+    var appointment = new Appointment();
+    appointment.fullName = req.body.fullName;
+    appointment.email = req.body.email;
+    appointment.mobile = req.body.mobile;
+    appointment.city = req.body.city;
+    appointment.doctorname = req.body.doctorname;
+    appointment.date = req.body.date;
+    appointment.save((err,doc) => {
+        if(!err){
+            res.redirect('/list');
+        }
+        else{
+            if (err.name == 'ValidationError') {
+                handleValidationError(err, req.body);
+                res.render("/addOrEdit", {
+                    viewTitle: "Insert Appointment",
+                    appointment: req.body
+                });
+            }
+            else
+                console.log('Error during record insertion:', +err);
+        }
+    });
+}
+
+function updateRecord(req, res) {
+    Appointment.findOneAndUpdate({ _id: req.body._id }, req.body, { new: true }, (err, doc) => {
+        if (!err) { res.redirect('/list'); }
+        else {
+            if (err.name == 'ValidationError') {
+                handleValidationError(err, req.body);
+                res.render("/addOrEdit", {
+                    viewTitle: 'Update Appointment',
+                    appointment: req.body
+                });
+            }
+            else
+                console.log('Error during record update : ' + err);
+        }
+    });
+}
+
+
+
+app.get('/list', (req,res) =>{
+    Appointment.find((err, docs) => {
+        if (!err) {
+            res.render("/list", {
+                list: docs
+            });
+        }
+        else {
+            console.log('Error in retrieving module list :' + err);
+        }
+    });
+});
+
+function handleValidationError(err, body) {
+    for (field in err.errors) {
+        switch (err.errors[field].path) {
+            case 'fullName':
+                body['fullNameError'] = err.errors[field].message;
+                break;
+            case 'email':
+                body['emailError'] = err.errors[field].message;
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+app.get('/:id', (req, res) => {
+    Appointment.findById(req.params.id, (err, doc) => {
+        if (!err) {
+            res.render("/addOrEdit", {
+                viewTitle: "Update Appointment",
+                appointment: doc
+            });
+        }
+    });
+});
+
+app.get('/delete/:id', (req, res) => {
+    Appointment.findByIdAndRemove(req.params.id, (err, doc) => {
+        if (!err) {
+            res.redirect('/list');
+        }
+        else { console.log('Error in module delete :' + err); }
+    });
+});
 
 
 
